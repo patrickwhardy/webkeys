@@ -1,3 +1,5 @@
+// import navigator from 'web-midi-api';
+
 var midi, data;
 // request MIDI access
 if (navigator.requestMIDIAccess) {
@@ -12,7 +14,6 @@ if (navigator.requestMIDIAccess) {
 function onMIDISuccess(midiAccess) {
     // when we get a succesful response, run this code
     midi = midiAccess; // this is our raw MIDI data, inputs, outputs, and sysex status
-
     var inputs = midi.inputs.values();
     // loop over all available inputs and listen for any MIDI input
     for (var input = inputs.next(); input && !input.done; input = inputs.next()) {
@@ -26,8 +27,58 @@ function onMIDIFailure(error) {
     console.log("No access to MIDI devices or your browser doesn't support WebMIDI API. Please use WebMIDIAPIShim " + error);
 }
 
+// function onMIDIMessage(message) {
+//     data = message.data; // this gives us our [command/channel, note, velocity] data.
+//     console.log('MIDI data', data); // MIDI data [144, 63, 73]
+// }
+
 function onMIDIMessage(message) {
-    console.log("doing something");
-    data = message.data; // this gives us our [command/channel, note, velocity] data.
-    console.log('MIDI data', data); // MIDI data [144, 63, 73]
+    data = event.data,
+    cmd = data[0] >> 4,
+    channel = data[0] & 0xf,
+    type = data[0] & 0xf0, // channel agnostic message type. Thanks, Phil Burk.
+    note = data[1],
+    velocity = data[2];
+    // with pressure and tilt off
+    // note off: 128, cmd: 8
+    // note on: 144, cmd: 9
+    // pressure / tilt on
+    // pressure: 176, cmd 11:
+    // bend: 224, cmd: 14
+    // log('MIDI data', data);
+    switch(type){
+        case 144: // noteOn message
+            noteOn(note, velocity);
+            break;
+        case 128: // noteOff message
+            noteOff(note, velocity);
+            break;
+    }
+    logger('MIDI data', data);
+}
+
+function noteOn(midiNote, velocity){
+    player(midiNote, velocity);
+}
+
+function noteOff(midiNote, velocity){
+    player(midiNote, velocity);
+}
+
+function player(note, velocity){
+	var sample = sampleMap['key'+note];
+	if(sample){
+		if(type === (0x80 & 0xf0) || velocity === 0){ //needs to be fixed for QuNexus, which always returns 144
+			btn[sample - 1].classList.remove('active');
+			return;
+		}
+		btn[sample - 1].classList.add('active');
+		btn[sample - 1].play(velocity);
+	}
+}
+
+function logger(label, data) {
+    data = data || null;
+    messages = label + " [channel: " + (data[0] & 0xf) + ", cmd: " + (data[0] >> 4) + ", type: " + (data[0] & 0xf0) + " , note: " + data[1] + " , velocity: " + data[2] + "]";
+    document.getElementById('log').textContent = messages;
 }
