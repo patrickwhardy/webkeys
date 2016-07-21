@@ -164,7 +164,7 @@ function noteOff(midiNote, velocity){
 function player(note, velocity){
 	var sample = sampleMap['key'+note];
 	if(sample){
-		if(type == (0x80 & 0xf0) || velocity == 0){ //needs to be fixed for QuNexus, which always returns 144
+		if(type == (0x80 & 0xf0) || velocity === 0){
 			btn[sample - 1].classList.remove('active');
 			return;
 		}
