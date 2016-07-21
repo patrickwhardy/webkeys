@@ -19,6 +19,7 @@
   "homepage": "https://github.com/patrickwhardy/webkeys#readme",
   "dependencies": {
     "express": "^4.14.0",
-    "socket.io": "^1.4.8"
+    "socket.io": "^1.4.8",
+    "web-midi-api": "^1.4.4"
   }
 }
